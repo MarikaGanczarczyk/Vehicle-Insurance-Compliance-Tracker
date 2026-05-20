@@ -13,15 +13,15 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build & Test') {
             steps {
-                sh 'mvn clean install'
+                sh 'mvn clean test'
             }
         }
 
-        stage('Test') {
+        stage('Generate Coverage') {
             steps {
-                sh 'mvn test'
+                sh 'mvn jacoco:report'
             }
         }
     }
