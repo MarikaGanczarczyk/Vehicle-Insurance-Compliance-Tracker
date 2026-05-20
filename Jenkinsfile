@@ -13,9 +13,15 @@ pipeline {
             }
         }
 
-        stage('Build & Test') {
+        stage('Build & Coverage') {
             steps {
                 sh 'mvn clean verify'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t erik/spring-app:latest .'
             }
         }
     }
