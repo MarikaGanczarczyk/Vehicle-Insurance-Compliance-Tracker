@@ -1,18 +1,17 @@
 package com.example.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+
 
 @Entity
+@Table(name = "vehicles")
 public class Vehicle {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer vehicleId;
     private String plate;
-    private String model;
+    private String brand;
 
     public Integer getVehicleId() {
         return vehicleId;
@@ -30,13 +29,11 @@ public class Vehicle {
         this.plate = plate;
     }
 
-    public String getModel() {
-        return model;
+    public String getBrand() {
+        return brand;
     }
 
-    public void setModel(String model) {
-        this.model = model;
+    public void setBrand(String brand) {
+        this.brand = brand;
     }
-
-
 }
