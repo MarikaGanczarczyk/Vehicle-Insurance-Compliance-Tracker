@@ -1,4 +1,4 @@
-/*package com.example.service;
+package com.example.service;
 
 import com.example.entity.InsurancePolicy;
 import com.example.repository.InsurancePolicyRepository;
@@ -19,7 +19,7 @@ public class InsurancePolicyService {
     public InsurancePolicy getPolicyByVehicle(Integer vehicleId) {
         return repo.findAll()
                 .stream()
-                .filter(p -> p.getVehicle().getId().equals(vehicleId))
+                .filter(p -> p.getVehicle().getVehicleId().equals(vehicleId))
                 .findFirst()
                 .orElse(null);
     }
@@ -27,4 +27,3 @@ public class InsurancePolicyService {
 }
 
 
- */
