@@ -1,4 +1,4 @@
-package com.example.service;
+/*package com.example.service;
 
 import com.example.entity.InsurancePolicy;
 import com.example.repository.InsurancePolicyRepository;
@@ -25,3 +25,6 @@ public class InsurancePolicyService {
     }
 
 }
+
+
+ */
