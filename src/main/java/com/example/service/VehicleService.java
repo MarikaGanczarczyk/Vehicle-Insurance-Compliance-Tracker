@@ -21,10 +21,25 @@ public class VehicleService {
         return repository.findAll();
     }
 
-    //We need getVehicleByID
-    // we need updateVehicleById
+    // getVehicleById
+    public Vehicle getVehicleById(Integer id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found: " + id));
+    }
 
-    public void deleteVehicle(Integer id) {
+    // we need updateVehicleById
+    public Vehicle updateVehicleById(int id, Vehicle updatedVehicle) {
+
+        Vehicle existingVehicle = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found: " + id));
+
+        existingVehicle.setBrand(updatedVehicle.getBrand());
+        existingVehicle.setPlate(updatedVehicle.getPlate());
+
+        return repository.save(existingVehicle);
+    }
+
+    public void deleteVehicle(int id) {
         repository.deleteById(id);
     }
 
