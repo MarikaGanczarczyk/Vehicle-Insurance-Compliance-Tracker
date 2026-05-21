@@ -1,7 +1,8 @@
 package com.example.entity;
 
 import jakarta.persistence.*;
-import org.springframework.data.annotation.Id;
+import jakarta.persistence.Id;
+
 
 import java.time.LocalDate;
 
@@ -12,11 +13,15 @@ public class InsurancePolicy {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "row_id")
     private Integer id;
 
-
+    @Column(name = "policy_name")
     private String policyType;
+
+    @Column(name = "issue_date")
     private LocalDate issueDate;
+    @Column(name = "expiry_date")
     private LocalDate expiryDate;
 
     @ManyToOne
