@@ -21,8 +21,13 @@ public class VehicleService {
         return repository.findAll();
     }
 
+    //We need getVehicleByID
+    // we need updateVehicleById
+
     public void deleteVehicle(Integer id) {
         repository.deleteById(id);
     }
+
+
 
 }
