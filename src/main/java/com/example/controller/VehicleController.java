@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/vehicles")
+@RequestMapping("/api/v1")
 public class VehicleController {
 
     @Autowired
@@ -27,7 +27,7 @@ public class VehicleController {
     }
 
     //GET /api/vehicles/{ID}
-    @GetMapping("/{id}")
+    @GetMapping("/vehicles/{id}")
     public ResponseEntity<Vehicle> getVehicleById(@PathVariable int id) {
 
         Vehicle vehicle = service.getVehicleById(id);
@@ -35,7 +35,7 @@ public class VehicleController {
     }
 
     //PUT /api/vehicles/{ID}
-    @PutMapping("/{id}")
+    @PutMapping("/vehicles/{id}")
     public ResponseEntity<Vehicle> updateVehicle(
             @PathVariable int id,
             @RequestBody Vehicle updatedVehicle) {
