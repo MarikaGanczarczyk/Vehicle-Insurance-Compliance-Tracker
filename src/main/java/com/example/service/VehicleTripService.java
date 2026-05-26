@@ -35,7 +35,7 @@ public class VehicleTripService {
 
         existingTrip.setLocation(updatedTrip.getLocation());
         existingTrip.setDateTime(updatedTrip.getDateTime());
-
+        existingTrip.setAction(updatedTrip.getAction());
         return  repository.save(existingTrip);
 
     }
