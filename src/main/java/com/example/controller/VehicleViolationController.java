@@ -11,29 +11,29 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/violations")
+@RequestMapping("/api/v1")
 public class VehicleViolationController {
 
     @Autowired
     private VehicleViolationService violationService;
 
-    @PostMapping
+    @PostMapping("/violations")
     public VehicleViolation createViolation(@RequestBody VehicleViolation violation) {
         return violationService.createViolation(violation);
     }
 
-    @GetMapping
+    @GetMapping("/violations")
     public List<VehicleViolation> getAllViolations() {
         return violationService.getAllViolations();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/violations/{id}")
     public ResponseEntity<VehicleViolation> getViolationById(@PathVariable int id) {
         VehicleViolation violation = violationService.getViolationById(id);
         return ResponseEntity.ok(violation);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/violations/{id}")
     public ResponseEntity<VehicleViolation> updateViolation (
             @PathVariable int id,
             @RequestBody VehicleViolation updatedViolation) {
@@ -43,7 +43,7 @@ public class VehicleViolationController {
         return ResponseEntity.ok(violation);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/violations/{id}")
     public void deleteViolation(@PathVariable int id) {
         violationService.deleteViolation(id);
     }
