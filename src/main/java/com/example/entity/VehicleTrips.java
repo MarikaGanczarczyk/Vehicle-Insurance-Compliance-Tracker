@@ -9,30 +9,19 @@ public class VehicleTrips {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private int rowId;
 
     private int vehicleId;
 
     private LocalDateTime dateTime;
 
-    private String action; // TRIP_START or TRIP_END
+    private String tripActions; // TRIP_START or TRIP_END
 
-    private String location;
+    private String locations;
 
-    // Default constructor
-    public VehicleTrips() {
-    }
-
-    // Constructor
-    public VehicleTrips(int vehicleId, LocalDateTime dateTime, String action, String location) {
-        this.vehicleId = vehicleId;
-        this.dateTime = dateTime;
-        this.action = action;
-        this.location = location;
-    }
 
     public int getId() {
-        return id;
+        return rowId;
     }
 
     public int getVehicleId() {
@@ -52,18 +41,18 @@ public class VehicleTrips {
     }
 
     public String getAction() {
-        return action;
+        return tripActions;
     }
 
     public void setAction(String action) {
-        this.action = action;
+        this.tripActions = action;
     }
 
     public String getLocation() {
-        return location;
+        return locations;
     }
 
     public void setLocation(String location) {
-        this.location = location;
+        this.locations = location;
     }
 }
