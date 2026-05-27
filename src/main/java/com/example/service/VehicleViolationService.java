@@ -18,7 +18,7 @@ public class VehicleViolationService {
     }
 
     public List<VehicleViolation> getAllViolations() {
-        return repository.findAll();
+        return repository.findAllLatestFirst();
     }
 
     public VehicleViolation getViolationById(int id) {
