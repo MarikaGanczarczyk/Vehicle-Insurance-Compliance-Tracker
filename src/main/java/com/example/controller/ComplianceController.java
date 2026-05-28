@@ -23,11 +23,13 @@ public class ComplianceController {
         this.vehicleViolationRepository = vehicleViolationRepository;
     }
 
-
+   // this end point is to run Compliance Check
     @PostMapping("/run")
     public List<VehicleViolation> runCompliance() {
         return complianceService.runComplianceCheck();
     }
+
+    // this is to check violation and get all violation 
     @GetMapping("/violations")
     public List<VehicleViolation> getAllViolations() {
         return vehicleViolationRepository.findAll();
