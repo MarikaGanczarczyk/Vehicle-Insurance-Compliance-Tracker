@@ -21,7 +21,7 @@ public class VehicleControllerTest {
 
     @Test
     void testGetAllVehicles() throws Exception {
-        mockMvc.perform(get("/vehicles"))
+        mockMvc.perform(get("/api/v1/vehicles"))
                 .andExpect(status().isOk());
     }
 }
