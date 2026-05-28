@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
@@ -27,8 +29,10 @@ public class CsvReportController {
 
 
     @GetMapping("/download/{date}")
-    public ResponseEntity<byte[]> downloadCsv(@PathVariable String date) { // returns HTTP response and contains byte[] (file data)
+    public ResponseEntity<byte[]> downloadCsv(@PathVariable String date) throws IOException { // returns HTTP response and contains byte[] (file data)
 
+
+        csvReportService.generateCsvFile(date); // saves file in the project
         String csvData = csvReportService.generateCsv(date); // we call here our service ("get Csv report as String")
 
         byte[] bytes = csvData.getBytes(StandardCharsets.UTF_8); // we convert text into binary format to be able to downloaded , UTF_8 - Supports all characters and works with special letters
