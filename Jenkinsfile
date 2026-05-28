@@ -70,8 +70,7 @@ pipeline {
             }
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
-                    archiveArtifacts artifacts: 'target/site/jacoco/**,target/jacoco.exec', allowEmptyArchive: true
+                    archive artifacts: 'target/surefire-reports/*.xml,target/site/jacoco/**,target/jacoco.exec', allowEmptyArchive: true
                     publishHTML(target: [
                         allowMissing: true,
                         alwaysLinkToLastBuild: true,
