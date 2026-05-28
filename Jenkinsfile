@@ -70,7 +70,7 @@ pipeline {
             }
             post {
                 always {
-                    archive artifacts: 'target/surefire-reports/*.xml,target/site/jacoco/**,target/jacoco.exec', allowEmptyArchive: true
+                    archive includes: 'target/surefire-reports/*.xml,target/site/jacoco/**,target/jacoco.exec'
                     publishHTML(target: [
                         allowMissing: true,
                         alwaysLinkToLastBuild: true,
