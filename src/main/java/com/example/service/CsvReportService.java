@@ -17,9 +17,10 @@ public class CsvReportService {
     // Reads violations from the database and converts them into CSV text format.
 
     private  VehicleViolationRepository vehicleViolationRepository;
-
-    public CsvReportService(VehicleViolationRepository vehicleViolationRepository) {
+    private final AwsS3Service awsS3Service;
+    public CsvReportService(VehicleViolationRepository vehicleViolationRepository, AwsS3Service awsS3Service) {
         this.vehicleViolationRepository = vehicleViolationRepository;
+        this.awsS3Service = awsS3Service;
     }
 
 
@@ -61,5 +62,10 @@ public class CsvReportService {
         return file;
     }
 
-
+    public String generateAndUploadCsv(String date) throws IOException {
+        File file = generateCsvFile(date);       // creates file
+        String url = awsS3Service.uploadFile(file); // sends to the aws
+        file.delete();                           //removes local file
+        return url;
+    }
 }
