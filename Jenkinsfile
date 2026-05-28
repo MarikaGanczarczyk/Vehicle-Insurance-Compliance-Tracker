@@ -13,10 +13,16 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'chmod +x mvnw'
-                        sh './mvnw clean verify'
+                        sh '''
+                            java -version
+                            chmod +x mvnw
+                            ./mvnw -B clean verify
+                        '''
                     } else {
-                        bat 'mvnw.cmd clean verify'
+                        bat '''
+                            java -version
+                            mvnw.cmd -B clean verify
+                        '''
                     }
                 }
             }
@@ -32,36 +38,6 @@ pipeline {
                         reportFiles: 'index.html',
                         reportName: 'JaCoCo Coverage Report'
                     ])
-                }
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        def dockerAvailable = sh(
-                                script: 'command -v docker >/dev/null 2>&1',
-                                returnStatus: true
-                        ) == 0
-
-                        if (dockerAvailable) {
-                            sh 'docker build -t erik/spring-app:latest .'
-                        } else {
-                            echo 'Skipping Docker Build: docker command not found on this Jenkins agent.'
-                        }
-                    } else {
-                        def dockerAvailable = bat(
-                                script: 'where docker >nul 2>nul',
-                                returnStatus: true
-                        ) == 0
-
-                        if (dockerAvailable) {
-                            bat 'docker build -t erik/spring-app:latest .'
-                        } else {
-                            echo 'Skipping Docker Build: docker command not found on this Jenkins agent.'
-                        }
-                    }
                 }
             }
         }
