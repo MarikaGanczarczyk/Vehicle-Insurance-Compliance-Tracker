@@ -40,9 +40,27 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'docker build -t erik/spring-app:latest .'
+                        def dockerAvailable = sh(
+                                script: 'command -v docker >/dev/null 2>&1',
+                                returnStatus: true
+                        ) == 0
+
+                        if (dockerAvailable) {
+                            sh 'docker build -t erik/spring-app:latest .'
+                        } else {
+                            echo 'Skipping Docker Build: docker command not found on this Jenkins agent.'
+                        }
                     } else {
-                        bat 'docker build -t erik/spring-app:latest .'
+                        def dockerAvailable = bat(
+                                script: 'where docker >nul 2>nul',
+                                returnStatus: true
+                        ) == 0
+
+                        if (dockerAvailable) {
+                            bat 'docker build -t erik/spring-app:latest .'
+                        } else {
+                            echo 'Skipping Docker Build: docker command not found on this Jenkins agent.'
+                        }
                     }
                 }
             }
