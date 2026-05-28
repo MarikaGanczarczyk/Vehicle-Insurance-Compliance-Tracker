@@ -4,8 +4,13 @@ import com.example.entity.VehicleViolation;
 import com.example.repository.VehicleViolationRepository;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+
+//First, the CSV data is generated as a String. Then, it is written into a physical file using File and FileWriter. This file can then be used for further processing, such as uploading to AWS S3.
 
 @Service
 public class CsvReportService {
@@ -39,6 +44,21 @@ public class CsvReportService {
         }
 
         return csv.toString();
+    }
+
+
+// This converts String report into csv file
+    public File generateCsvFile(String date) throws IOException {// File is a Class in java
+        String csvData = generateCsv(date);
+
+        String fileName = "violations_" + date + ".csv";
+        File file = new File(fileName);
+
+        try (FileWriter writer = new FileWriter(file)) { // This Class creates the file on the disk
+            writer.write(csvData);
+        }
+
+        return file;
     }
 
 

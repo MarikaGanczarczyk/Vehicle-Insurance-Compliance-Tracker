@@ -12,14 +12,18 @@ import java.util.List;
 
 @Repository
 public interface VehicleViolationRepository extends JpaRepository<VehicleViolation, Integer> {
-    boolean existsByVehicleIdAndViolationTypeAndDateTime(int vehicleId, String violationType, LocalDateTime dateTime);
 
-    @Query("""
-            select violation from VehicleViolation violation
-            order by violation.dateTime desc
-            """)
+    boolean existsByVehicleIdAndViolationTypeAndDateTime(
+            int vehicleId,
+            String violationType,
+            LocalDateTime dateTime
+    );
+
+    // Get violations ordered by latest first
+    @Query("SELECT v FROM VehicleViolation v ORDER BY v.dateTime DESC")
     List<VehicleViolation> findAllLatestFirst();
 
+    // Get violations for a specific date (used by CSV)
     @Query("SELECT v FROM VehicleViolation v WHERE CAST(v.dateTime AS date) = :date")
     List<VehicleViolation> findByDate(@Param("date") LocalDate date);
 }
