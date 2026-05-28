@@ -20,8 +20,9 @@ import java.util.Optional;
 @Service
 public class ComplianceService {
 
-    private static final String EXPIRED_INSURANCE = "EXPIRED_INSURANCE";
     private static final String UNINSURED_TRIP = "UNINSURED_TRIP";
+    private static final String TRIP_START = "TRIP_START";
+    private static final String TRIP_END = "TRIP_END";
 
     private final VehicleRepository vehicleRepository;
     private final InsurancePolicyRepository insurancePolicyRepository;
@@ -54,28 +55,20 @@ public class ComplianceService {
             List<InsurancePolicy> policies = insurancePolicyRepository.findPoliciesForVehicle(vehicleId);
             List<VehicleTrips> trips = vehicleTripsRepository.findTripHistoryByVehicleId(vehicleId);
 
-            createExpiredInsuranceViolation(vehicle, policies, today).ifPresent(violation -> {
+            createIllegalUsageViolation(vehicle, policies, trips, today).ifPresent(violation -> {
                 if (saveViolationIfMissing(violation)) {
                     newViolations.add(violation);
                 }
             });
-
-            for (VehicleTrips trip : trips) {
-                if (!isTripCoveredByAnyPolicy(trip, policies)) {
-                    VehicleViolation violation = buildUninsuredTripViolation(vehicle, trip);
-                    if (saveViolationIfMissing(violation)) {
-                        newViolations.add(violation);
-                    }
-                }
-            }
         }
 
         return newViolations;
     }
 
-    private Optional<VehicleViolation> createExpiredInsuranceViolation(
+    private Optional<VehicleViolation> createIllegalUsageViolation(
             Vehicle vehicle,
             List<InsurancePolicy> policies,
+            List<VehicleTrips> trips,
             LocalDate today
     ) {
         if (policies.isEmpty()) {
@@ -84,52 +77,57 @@ public class ComplianceService {
 
         InsurancePolicy latestPolicy = policies.get(0);
         LocalDate expiryDate = latestPolicy.getExpiryDate();
-        if (expiryDate == null || !expiryDate.isBefore(today)) {
+        if (expiryDate == null || expiryDate.isAfter(today)) {
             return Optional.empty();
         }
 
-        VehicleViolation violation = new VehicleViolation();
-        violation.setVehicleId(vehicle.getVehicleId());
-        violation.setViolationType(EXPIRED_INSURANCE);
-        violation.setDateTime(expiryDate.atStartOfDay());
-        violation.setDescription("Latest insurance policy expired on " + expiryDate + ".");
-        return Optional.of(violation);
+        Optional<VehicleTrips> lastTripStart = findLastMovementByAction(trips, TRIP_START);
+        Optional<VehicleTrips> lastTripEnd = findLastMovementByAction(trips, TRIP_END);
+
+        if (lastTripStart.isEmpty()) {
+            return Optional.empty();
+        }
+
+        VehicleTrips start = lastTripStart.get();
+        LocalDateTime startDateTime = start.getDateTime();
+        if (!startDateTime.toLocalDate().isAfter(expiryDate)) {
+            return Optional.empty();
+        }
+
+        if (lastTripEnd.isPresent() && !startDateTime.isAfter(lastTripEnd.get().getDateTime())) {
+            return Optional.empty();
+        }
+
+        return Optional.of(buildUninsuredTripViolation(vehicle, start, expiryDate));
     }
 
-    private VehicleViolation buildUninsuredTripViolation(Vehicle vehicle, VehicleTrips trip) {
+    private Optional<VehicleTrips> findLastMovementByAction(List<VehicleTrips> trips, String action) {
+        VehicleTrips lastMovement = null;
+        for (VehicleTrips trip : trips) {
+            if (trip.getDateTime() != null && action.equalsIgnoreCase(trip.getAction())) {
+                lastMovement = trip;
+            }
+        }
+        return Optional.ofNullable(lastMovement);
+    }
+
+    private VehicleViolation buildUninsuredTripViolation(
+            Vehicle vehicle,
+            VehicleTrips tripStart,
+            LocalDate expiryDate
+    ) {
         VehicleViolation violation = new VehicleViolation();
         violation.setVehicleId(vehicle.getVehicleId());
         violation.setViolationType(UNINSURED_TRIP);
-        violation.setDateTime(trip.getDateTime());
+        violation.setDateTime(tripStart.getDateTime());
         violation.setDescription(
-                "Trip " + trip.getAction()
-                        + " at " + trip.getLocation()
-                        + " was recorded without an active insurance policy."
+                "Vehicle started a trip at "
+                        + tripStart.getLocation()
+                        + " after the latest insurance policy expired on "
+                        + expiryDate
+                        + "."
         );
         return violation;
-    }
-
-    private boolean isTripCoveredByAnyPolicy(VehicleTrips trip, List<InsurancePolicy> policies) {
-        LocalDateTime tripDateTime = trip.getDateTime();
-        if (tripDateTime == null) {
-            return false;
-        }
-
-        for (InsurancePolicy policy : policies) {
-            LocalDate issueDate = policy.getIssueDate();
-            LocalDate expiryDate = policy.getExpiryDate();
-            if (issueDate == null || expiryDate == null) {
-                continue;
-            }
-
-            boolean startsAfterOrOnIssueDate = !tripDateTime.toLocalDate().isBefore(issueDate);
-            boolean endsBeforeOrOnExpiryDate = !tripDateTime.toLocalDate().isAfter(expiryDate);
-            if (startsAfterOrOnIssueDate && endsBeforeOrOnExpiryDate) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private boolean saveViolationIfMissing(VehicleViolation violation) {
