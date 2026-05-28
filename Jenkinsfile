@@ -11,7 +11,14 @@ pipeline {
 
         stage('Build, Test & Coverage') {
             steps {
-                sh 'mvn clean verify'
+                script {
+                    if (isUnix()) {
+                        sh 'chmod +x mvnw'
+                        sh './mvnw clean verify'
+                    } else {
+                        bat 'mvnw.cmd clean verify'
+                    }
+                }
             }
             post {
                 always {
@@ -31,7 +38,13 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t erik/spring-app:latest .'
+                script {
+                    if (isUnix()) {
+                        sh 'docker build -t erik/spring-app:latest .'
+                    } else {
+                        bat 'docker build -t erik/spring-app:latest .'
+                    }
+                }
             }
         }
     }
