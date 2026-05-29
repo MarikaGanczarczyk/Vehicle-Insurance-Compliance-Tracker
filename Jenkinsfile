@@ -178,8 +178,18 @@ pipeline {
                                 git checkout -B master origin/master
                                 git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
                                 set +x
-                                GIT_AUTH_HEADER="$(printf '%s:%s' "${GIT_USERNAME}" "${GIT_TOKEN}" | base64 | tr -d '\\n')"
-                                git -c "http.https://github.com/.extraheader=Authorization: Basic ${GIT_AUTH_HEADER}" push "https://github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
+                                ASKPASS_FILE="$(mktemp)"
+                                cat > "${ASKPASS_FILE}" <<'EOF'
+#!/bin/sh
+case "$1" in
+    *Username*) printf '%s\n' "$GIT_USERNAME" ;;
+    *Password*) printf '%s\n' "$GIT_TOKEN" ;;
+    *) printf '\n' ;;
+esac
+EOF
+                                chmod 700 "${ASKPASS_FILE}"
+                                GIT_ASKPASS="${ASKPASS_FILE}" GIT_TERMINAL_PROMPT=0 git push "https://github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
+                                rm -f "${ASKPASS_FILE}"
                             '''
                         } else {
                             bat '''
@@ -194,8 +204,24 @@ pipeline {
                                 if errorlevel 1 exit /b 1
                                 git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
                                 if errorlevel 1 exit /b 1
-                                for /f %%A in ('powershell -NoProfile -Command "$pair = $env:GIT_USERNAME + ':' + $env:GIT_TOKEN; [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($pair))"') do set GIT_AUTH_HEADER=%%A
-                                git -c "http.https://github.com/.extraheader=Authorization: Basic %GIT_AUTH_HEADER%" push "https://github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
+                                set "GIT_ASKPASS=%CD%\\git-askpass.bat"
+                                (
+                                    echo @echo off
+                                    echo echo %%1 ^| findstr /I "Username" ^>nul
+                                    echo if not errorlevel 1 ^(
+                                    echo     echo %%GIT_USERNAME%%
+                                    echo     exit /b 0
+                                    echo ^)
+                                    echo echo %%1 ^| findstr /I "Password" ^>nul
+                                    echo if not errorlevel 1 ^(
+                                    echo     echo %%GIT_TOKEN%%
+                                    echo     exit /b 0
+                                    echo ^)
+                                    echo exit /b 0
+                                ) > "%GIT_ASKPASS%"
+                                set "GIT_TERMINAL_PROMPT=0"
+                                git push "https://github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
+                                del "%GIT_ASKPASS%"
                                 if errorlevel 1 exit /b 1
                             '''
                         }
