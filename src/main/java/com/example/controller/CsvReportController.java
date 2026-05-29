@@ -37,7 +37,7 @@ public class CsvReportController {
 
 
 //  1. generate + upload
-        File file = csvReportService.generateCsvAndUploadAndReturnBytes(date);
+        File file = csvReportService.generateCsvAndUpload(date);
 
         byte[] bytes =  Files.readAllBytes(file.toPath()); // we convert text into binary format to be able to downloaded , UTF_8 - Supports all characters and works with special letters
         file.delete();

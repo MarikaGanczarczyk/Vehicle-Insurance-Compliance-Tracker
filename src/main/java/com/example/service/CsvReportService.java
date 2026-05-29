@@ -19,9 +19,11 @@ public class CsvReportService {
 
     private  VehicleViolationRepository vehicleViolationRepository;
     private final AwsS3Service awsS3Service;
-    public CsvReportService(VehicleViolationRepository vehicleViolationRepository, AwsS3Service awsS3Service) {
+    public final SqsService sqsService;
+    public CsvReportService(VehicleViolationRepository vehicleViolationRepository, AwsS3Service awsS3Service, SqsService sqsService) {
         this.vehicleViolationRepository = vehicleViolationRepository;
         this.awsS3Service = awsS3Service;
+        this.sqsService = sqsService;
     }
 
 
@@ -70,10 +72,21 @@ public class CsvReportService {
 //        return url;
 //    }
 
-    public File generateCsvAndUploadAndReturnBytes(String date) throws IOException {
-        File file = generateCsvFile(date);// creates file
+    public File generateCsvAndUpload(String date) throws IOException {
 
-        awsS3Service.uploadFile(file); // sends to the aws
+        File file = generateCsvFile(date);// creates file
+        System.out.println(" CSV generated: " + file.getName());
+
+
+        String url = awsS3Service.uploadFile(file); // sends to the aws
+        System.out.println(" Uploaded to S3: " + url);
+
+
+        String message = String.format ( "CSV Report Ready | Date: %s  | File: %s",
+        date, url);
+
+        sqsService.sendMessage(message);
+        System.out.println(" Message sent to SQS" + message);
 
         return file;
     }
