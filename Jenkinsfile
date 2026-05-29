@@ -82,5 +82,49 @@ pipeline {
                 }
             }
         }
+
+        stage('Merge develop to master') {
+            when {
+                expression {
+                    return (
+                        env.BRANCH_NAME == 'develop'
+                        || env.GIT_BRANCH == 'develop'
+                        || env.GIT_BRANCH == 'origin/develop'
+                        || env.GIT_BRANCH == 'refs/heads/develop'
+                    )
+                }
+            }
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh '''
+                            set -e
+                            git config user.name "Jenkins CI"
+                            git config user.email "jenkins-ci@example.com"
+                            git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
+                            git checkout -B master origin/master
+                            git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
+                            git push origin master
+                        '''
+                    } else {
+                        bat '''
+                            @echo off
+                            git config user.name "Jenkins CI"
+                            if errorlevel 1 exit /b 1
+                            git config user.email "jenkins-ci@example.com"
+                            if errorlevel 1 exit /b 1
+                            git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
+                            if errorlevel 1 exit /b 1
+                            git checkout -B master origin/master
+                            if errorlevel 1 exit /b 1
+                            git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
+                            if errorlevel 1 exit /b 1
+                            git push origin master
+                            if errorlevel 1 exit /b 1
+                        '''
+                    }
+                }
+            }
+        }
     }
 }
