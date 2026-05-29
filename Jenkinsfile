@@ -9,21 +9,68 @@ pipeline {
             }
         }
 
+        stage('Agent Diagnostics') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh '''
+                            set +e
+                            echo "User: $(whoami)"
+                            echo "Working directory: $(pwd)"
+                            echo "PATH=$PATH"
+                            uname -a
+                            command -v java
+                            java -version
+                            command -v javac
+                            javac -version
+                            command -v curl
+                            command -v wget
+                            command -v unzip
+                            ls -la
+                            ls -la .mvn .mvn/wrapper
+                            head -1 mvnw
+                            sed -n '1,20p' .mvn/wrapper/maven-wrapper.properties
+                            curl -I https://repo.maven.apache.org/maven2/ || true
+                            exit 0
+                        '''
+                    } else {
+                        bat '''
+                            echo User: %USERNAME%
+                            echo Working directory: %CD%
+                            echo PATH=%PATH%
+                            where java
+                            java -version
+                            where javac
+                            javac -version
+                            where curl
+                            dir
+                            dir .mvn
+                            dir .mvn\\wrapper
+                            type .mvn\\wrapper\\maven-wrapper.properties
+                            curl -I https://repo.maven.apache.org/maven2/
+                            exit /b 0
+                        '''
+                    }
+                }
+            }
+        }
+
         stage('Build, Test & Coverage') {
             steps {
                 script {
                     if (isUnix()) {
+                        sh 'java -version'
                         sh 'chmod +x mvnw'
-                        sh './mvnw clean verify'
+                        sh 'MVNW_VERBOSE=true ./mvnw -B clean verify'
                     } else {
-                        bat 'mvnw.cmd clean verify'
+                        bat 'java -version'
+                        bat 'set MVNW_VERBOSE=true && mvnw.cmd -B clean verify'
                     }
                 }
             }
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
-                    archiveArtifacts artifacts: 'target/site/jacoco/**,target/jacoco.exec', allowEmptyArchive: true
+                    archive includes: 'target/surefire-reports/*.xml,target/site/jacoco/**,target/jacoco.exec'
                     publishHTML(target: [
                         allowMissing: true,
                         alwaysLinkToLastBuild: true,
@@ -32,36 +79,6 @@ pipeline {
                         reportFiles: 'index.html',
                         reportName: 'JaCoCo Coverage Report'
                     ])
-                }
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        def dockerAvailable = sh(
-                                script: 'command -v docker >/dev/null 2>&1',
-                                returnStatus: true
-                        ) == 0
-
-                        if (dockerAvailable) {
-                            sh 'docker build -t erik/spring-app:latest .'
-                        } else {
-                            echo 'Skipping Docker Build: docker command not found on this Jenkins agent.'
-                        }
-                    } else {
-                        def dockerAvailable = bat(
-                                script: 'where docker >nul 2>nul',
-                                returnStatus: true
-                        ) == 0
-
-                        if (dockerAvailable) {
-                            bat 'docker build -t erik/spring-app:latest .'
-                        } else {
-                            echo 'Skipping Docker Build: docker command not found on this Jenkins agent.'
-                        }
-                    }
                 }
             }
         }
