@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -62,10 +63,20 @@ public class CsvReportService {
         return file;
     }
 
-    public String generateAndUploadCsv(String date) throws IOException {
-        File file = generateCsvFile(date);       // creates file
-        String url = awsS3Service.uploadFile(file); // sends to the aws
-        file.delete();                           //removes local file
-        return url;
+//    public String generateAndUploadCsv(String date) throws IOException {
+//        File file = generateCsvFile(date);       // creates file
+//        String url = awsS3Service.uploadFile(file); // sends to the aws
+//        file.delete();                           //removes local file
+//        return url;
+//    }
+
+    public File generateCsvAndUploadAndReturnBytes(String date) throws IOException {
+        File file = generateCsvFile(date);// creates file
+
+        awsS3Service.uploadFile(file); // sends to the aws
+
+        return file;
     }
+
+
 }
