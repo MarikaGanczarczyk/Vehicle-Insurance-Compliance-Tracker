@@ -177,7 +177,9 @@ pipeline {
                                 git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
                                 git checkout -B master origin/master
                                 git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
-                                git push "https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
+                                set +x
+                                GIT_AUTH_HEADER="$(printf '%s:%s' "${GIT_USERNAME}" "${GIT_TOKEN}" | base64 | tr -d '\\n')"
+                                git -c "http.https://github.com/.extraheader=Authorization: Basic ${GIT_AUTH_HEADER}" push "https://github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
                             '''
                         } else {
                             bat '''
@@ -192,7 +194,8 @@ pipeline {
                                 if errorlevel 1 exit /b 1
                                 git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
                                 if errorlevel 1 exit /b 1
-                                git push "https://%GIT_USERNAME%:%GIT_TOKEN%@github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
+                                for /f %%A in ('powershell -NoProfile -Command "$pair = $env:GIT_USERNAME + ':' + $env:GIT_TOKEN; [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($pair))"') do set GIT_AUTH_HEADER=%%A
+                                git -c "http.https://github.com/.extraheader=Authorization: Basic %GIT_AUTH_HEADER%" push "https://github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
                                 if errorlevel 1 exit /b 1
                             '''
                         }
