@@ -21,6 +21,10 @@ public class AwsS3Service {
     }
 
     public String uploadFile(File file) {
+        System.out.println(">>> Uploading file: " + file.getName());
+        System.out.println(">>> File exists: " + file.exists());
+        System.out.println(">>> Bucket: " + bucketName);
+        System.out.println(">>> Region: " + file.getAbsolutePath());
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(file.getName())        // nazwa pliku w S3
@@ -28,7 +32,7 @@ public class AwsS3Service {
                 .build();
 
         s3Client.putObject(request, RequestBody.fromFile(file));
-
+        System.out.println(">>> Upload successful!");
         return "https://" + bucketName + ".s3.amazonaws.com/" + file.getName();
     }
 }
