@@ -3,7 +3,6 @@ pipeline {
 
     parameters {
         booleanParam(name: 'PUSH_DOCKER_IMAGE', defaultValue: false, description: 'Push the Docker image to Docker Hub after a successful build')
-        booleanParam(name: 'MERGE_TO_MASTER', defaultValue: false, description: 'Merge develop into master after a successful build')
     }
 
     environment {
@@ -157,16 +156,18 @@ pipeline {
         stage('Merge develop to master') {
             when {
                 expression {
-                    return params.MERGE_TO_MASTER && (
-                        env.BRANCH_NAME == 'develop'
-                        || env.GIT_BRANCH == 'develop'
-                        || env.GIT_BRANCH == 'origin/develop'
-                        || env.GIT_BRANCH == 'refs/heads/develop'
+                    def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: ''
+                    return (
+                        branchName == 'develop'
+                        || branchName == 'origin/develop'
+                        || branchName == 'refs/heads/develop'
+                        || branchName == '*/develop'
                     )
                 }
             }
             steps {
                 script {
+                    echo 'Merging origin/develop into master after successful build'
                     withCredentials([usernamePassword(credentialsId: 'github-push-token', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
                         if (isUnix()) {
                             sh '''
