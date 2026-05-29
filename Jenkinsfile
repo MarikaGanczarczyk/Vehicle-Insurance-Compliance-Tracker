@@ -181,14 +181,10 @@ pipeline {
                                 ASKPASS_FILE="$(mktemp)"
                                 cat > "${ASKPASS_FILE}" <<'EOF'
 #!/bin/sh
-case "$1" in
-    *Username*) printf '%s\n' "$GIT_USERNAME" ;;
-    *Password*) printf '%s\n' "$GIT_TOKEN" ;;
-    *) printf '\n' ;;
-esac
+printf '%s\n' "$GIT_TOKEN"
 EOF
                                 chmod 700 "${ASKPASS_FILE}"
-                                GIT_ASKPASS="${ASKPASS_FILE}" GIT_TERMINAL_PROMPT=0 git push "https://github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
+                                GIT_ASKPASS="${ASKPASS_FILE}" GIT_TERMINAL_PROMPT=0 git push "https://${GIT_USERNAME}@github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
                                 rm -f "${ASKPASS_FILE}"
                             '''
                         } else {
@@ -207,20 +203,11 @@ EOF
                                 set "GIT_ASKPASS=%CD%\\git-askpass.bat"
                                 (
                                     echo @echo off
-                                    echo echo %%1 ^| findstr /I "Username" ^>nul
-                                    echo if not errorlevel 1 ^(
-                                    echo     echo %%GIT_USERNAME%%
-                                    echo     exit /b 0
-                                    echo ^)
-                                    echo echo %%1 ^| findstr /I "Password" ^>nul
-                                    echo if not errorlevel 1 ^(
-                                    echo     echo %%GIT_TOKEN%%
-                                    echo     exit /b 0
-                                    echo ^)
+                                    echo echo %%GIT_TOKEN%%
                                     echo exit /b 0
                                 ) > "%GIT_ASKPASS%"
                                 set "GIT_TERMINAL_PROMPT=0"
-                                git push "https://github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
+                                git push "https://%GIT_USERNAME%@github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
                                 del "%GIT_ASKPASS%"
                                 if errorlevel 1 exit /b 1
                             '''
