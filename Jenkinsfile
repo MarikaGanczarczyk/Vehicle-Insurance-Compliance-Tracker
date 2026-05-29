@@ -1,6 +1,15 @@
 pipeline {
     agent any
 
+    parameters {
+        booleanParam(name: 'PUSH_DOCKER_IMAGE', defaultValue: false, description: 'Push the Docker image to Docker Hub after a successful build')
+        booleanParam(name: 'MERGE_TO_MASTER', defaultValue: false, description: 'Merge develop into master after a successful build')
+    }
+
+    environment {
+        DOCKER_IMAGE_REPOSITORY = 'vehicle-insurance-compliance-tracker'
+    }
+
     stages {
 
         stage('Checkout') {
@@ -83,10 +92,72 @@ pipeline {
             }
         }
 
+        stage('Docker Build') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh '''
+                            set -e
+                            docker version
+                            docker build -t "${DOCKER_IMAGE_REPOSITORY}:${BUILD_NUMBER}" -t "${DOCKER_IMAGE_REPOSITORY}:latest" .
+                        '''
+                    } else {
+                        bat '''
+                            @echo off
+                            docker version
+                            if errorlevel 1 exit /b 1
+                            docker build -t "%DOCKER_IMAGE_REPOSITORY%:%BUILD_NUMBER%" -t "%DOCKER_IMAGE_REPOSITORY%:latest" .
+                            if errorlevel 1 exit /b 1
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Docker Push') {
+            when {
+                expression {
+                    return params.PUSH_DOCKER_IMAGE
+                }
+            }
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-token', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_TOKEN')]) {
+                        if (isUnix()) {
+                            sh '''
+                                set -e
+                                docker tag "${DOCKER_IMAGE_REPOSITORY}:${BUILD_NUMBER}" "${DOCKER_USERNAME}/${DOCKER_IMAGE_REPOSITORY}:${BUILD_NUMBER}"
+                                docker tag "${DOCKER_IMAGE_REPOSITORY}:latest" "${DOCKER_USERNAME}/${DOCKER_IMAGE_REPOSITORY}:latest"
+                                echo "${DOCKER_TOKEN}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+                                docker push "${DOCKER_USERNAME}/${DOCKER_IMAGE_REPOSITORY}:${BUILD_NUMBER}"
+                                docker push "${DOCKER_USERNAME}/${DOCKER_IMAGE_REPOSITORY}:latest"
+                                docker logout
+                            '''
+                        } else {
+                            bat '''
+                                @echo off
+                                docker tag "%DOCKER_IMAGE_REPOSITORY%:%BUILD_NUMBER%" "%DOCKER_USERNAME%/%DOCKER_IMAGE_REPOSITORY%:%BUILD_NUMBER%"
+                                if errorlevel 1 exit /b 1
+                                docker tag "%DOCKER_IMAGE_REPOSITORY%:latest" "%DOCKER_USERNAME%/%DOCKER_IMAGE_REPOSITORY%:latest"
+                                if errorlevel 1 exit /b 1
+                                echo %DOCKER_TOKEN% | docker login -u "%DOCKER_USERNAME%" --password-stdin
+                                if errorlevel 1 exit /b 1
+                                docker push "%DOCKER_USERNAME%/%DOCKER_IMAGE_REPOSITORY%:%BUILD_NUMBER%"
+                                if errorlevel 1 exit /b 1
+                                docker push "%DOCKER_USERNAME%/%DOCKER_IMAGE_REPOSITORY%:latest"
+                                if errorlevel 1 exit /b 1
+                                docker logout
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Merge develop to master') {
             when {
                 expression {
-                    return (
+                    return params.MERGE_TO_MASTER && (
                         env.BRANCH_NAME == 'develop'
                         || env.GIT_BRANCH == 'develop'
                         || env.GIT_BRANCH == 'origin/develop'
@@ -96,32 +167,34 @@ pipeline {
             }
             steps {
                 script {
-                    if (isUnix()) {
-                        sh '''
-                            set -e
-                            git config user.name "Jenkins CI"
-                            git config user.email "jenkins-ci@example.com"
-                            git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
-                            git checkout -B master origin/master
-                            git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
-                            git push origin master
-                        '''
-                    } else {
-                        bat '''
-                            @echo off
-                            git config user.name "Jenkins CI"
-                            if errorlevel 1 exit /b 1
-                            git config user.email "jenkins-ci@example.com"
-                            if errorlevel 1 exit /b 1
-                            git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
-                            if errorlevel 1 exit /b 1
-                            git checkout -B master origin/master
-                            if errorlevel 1 exit /b 1
-                            git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
-                            if errorlevel 1 exit /b 1
-                            git push origin master
-                            if errorlevel 1 exit /b 1
-                        '''
+                    withCredentials([usernamePassword(credentialsId: 'github-push-token', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
+                        if (isUnix()) {
+                            sh '''
+                                set -e
+                                git config user.name "Jenkins CI"
+                                git config user.email "jenkins-ci@example.com"
+                                git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
+                                git checkout -B master origin/master
+                                git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
+                                git push "https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
+                            '''
+                        } else {
+                            bat '''
+                                @echo off
+                                git config user.name "Jenkins CI"
+                                if errorlevel 1 exit /b 1
+                                git config user.email "jenkins-ci@example.com"
+                                if errorlevel 1 exit /b 1
+                                git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
+                                if errorlevel 1 exit /b 1
+                                git checkout -B master origin/master
+                                if errorlevel 1 exit /b 1
+                                git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
+                                if errorlevel 1 exit /b 1
+                                git push "https://%GIT_USERNAME%:%GIT_TOKEN%@github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
+                                if errorlevel 1 exit /b 1
+                            '''
+                        }
                     }
                 }
             }
