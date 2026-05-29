@@ -168,31 +168,28 @@ pipeline {
             steps {
                 script {
                     echo 'Merging origin/develop into master after successful build'
-                    withCredentials([usernamePassword(credentialsId: 'github-push-token', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
+                    withCredentials([sshUserPrivateKey(credentialsId: 'github-deploy-key', keyFileVariable: 'GIT_SSH_KEY')]) {
                         if (isUnix()) {
                             sh '''
                                 set -e
+                                export GIT_SSH_COMMAND="ssh -i ${GIT_SSH_KEY} -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
                                 git config user.name "Jenkins CI"
                                 git config user.email "jenkins-ci@example.com"
+                                git remote set-url origin git@github.com:MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git
                                 git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
                                 git checkout -B master origin/master
                                 git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
-                                set +x
-                                ASKPASS_FILE="$(mktemp)"
-                                cat > "${ASKPASS_FILE}" <<'EOF'
-#!/bin/sh
-printf '%s\n' "$GIT_TOKEN"
-EOF
-                                chmod 700 "${ASKPASS_FILE}"
-                                GIT_ASKPASS="${ASKPASS_FILE}" GIT_TERMINAL_PROMPT=0 git push "https://${GIT_USERNAME}@github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
-                                rm -f "${ASKPASS_FILE}"
+                                git push origin master
                             '''
                         } else {
                             bat '''
                                 @echo off
+                                set "GIT_SSH_COMMAND=ssh -i %GIT_SSH_KEY% -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
                                 git config user.name "Jenkins CI"
                                 if errorlevel 1 exit /b 1
                                 git config user.email "jenkins-ci@example.com"
+                                if errorlevel 1 exit /b 1
+                                git remote set-url origin git@github.com:MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git
                                 if errorlevel 1 exit /b 1
                                 git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
                                 if errorlevel 1 exit /b 1
@@ -200,15 +197,7 @@ EOF
                                 if errorlevel 1 exit /b 1
                                 git merge --no-ff origin/develop -m "Merge develop into master after successful Jenkins build"
                                 if errorlevel 1 exit /b 1
-                                set "GIT_ASKPASS=%CD%\\git-askpass.bat"
-                                (
-                                    echo @echo off
-                                    echo echo %%GIT_TOKEN%%
-                                    echo exit /b 0
-                                ) > "%GIT_ASKPASS%"
-                                set "GIT_TERMINAL_PROMPT=0"
-                                git push "https://%GIT_USERNAME%@github.com/MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git" master
-                                del "%GIT_ASKPASS%"
+                                git push origin master
                                 if errorlevel 1 exit /b 1
                             '''
                         }
