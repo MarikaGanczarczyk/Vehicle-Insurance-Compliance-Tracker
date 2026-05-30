@@ -26,4 +26,10 @@ public interface VehicleViolationRepository extends JpaRepository<VehicleViolati
     // Get violations for a specific date (used by CSV)
     @Query("SELECT v FROM VehicleViolation v WHERE CAST(v.dateTime AS date) = :date")
     List<VehicleViolation> findByDate(@Param("date") LocalDate date);
+
+    @Query("SELECT v FROM VehicleViolation v WHERE CAST(v.dateTime AS date) BETWEEN :from AND :to")
+    List<VehicleViolation> findByDateBetween(
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to
+    );
 }

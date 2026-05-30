@@ -35,4 +35,18 @@ public class AwsS3Service {
         System.out.println(">>> Upload successful!");
         return "https://" + bucketName + ".s3.amazonaws.com/" + file.getName();
     }
+
+    public String uploadMonthlyReport(File file, int year, int month) {
+        // Ścieżka w S3: reports/2025/01/monthly_report_2025-01.csv
+        String s3Key = String.format("reports/%d/%02d/%s", year, month, file.getName());
+
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(s3Key)
+                .contentType("text/csv")
+                .build();
+
+        s3Client.putObject(request, RequestBody.fromFile(file));
+        return "https://" + bucketName + ".s3.amazonaws.com/" + s3Key;
+    }
 }

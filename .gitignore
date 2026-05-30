@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+k8s/aws-secret.yaml
+k8s/postgres-secret.yaml

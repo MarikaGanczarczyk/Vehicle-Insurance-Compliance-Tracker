@@ -65,12 +65,7 @@ public class CsvReportService {
         return file;
     }
 
-//    public String generateAndUploadCsv(String date) throws IOException {
-//        File file = generateCsvFile(date);       // creates file
-//        String url = awsS3Service.uploadFile(file); // sends to the aws
-//        file.delete();                           //removes local file
-//        return url;
-//    }
+
 
     public File generateCsvAndUpload(String date) throws IOException {
 
@@ -88,6 +83,41 @@ public class CsvReportService {
         sqsService.sendMessage(message);
         System.out.println(" Message sent to SQS" + message);
 
+        return file;
+    }
+
+    public File generateMonthlyCsvAndUpload(int year, int month) throws IOException {
+        LocalDate from = LocalDate.of(year, month, 1);
+        LocalDate to = from.withDayOfMonth(from.lengthOfMonth());
+
+        List<VehicleViolation> violations = vehicleViolationRepository
+                .findByDateBetween(from, to);
+
+        // build CSV
+        StringBuilder csv = new StringBuilder();
+        csv.append("vehicleId,violationType,dateTime,description\n");
+        for (VehicleViolation v : violations) {
+            csv.append(v.getVehicleId()).append(",");
+            csv.append(v.getViolationType()).append(",");
+            csv.append(v.getDateTime()).append(",");
+            csv.append(v.getDescription()).append("\n");
+        }
+
+        // Nazwa pliku: monthly_report_2025-01.csv
+        String fileName = String.format("monthly_report_%d-%02d.csv", year, month);
+        File file = new File(fileName);
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(csv.toString());
+        }
+
+        // Upload do S3 z folderem miesięcznym
+        String url = awsS3Service.uploadMonthlyReport(file, year, month);
+        System.out.println("Monthly report uploaded: " + url);
+
+        String message = String.format("Monthly Report Ready | %d-%02d | File: %s", year, month, url);
+        sqsService.sendMessage(message);
+
+        file.delete(); // usuń lokalny plik po uploadzie
         return file;
     }
 

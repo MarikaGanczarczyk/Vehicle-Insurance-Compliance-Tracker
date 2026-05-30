@@ -50,6 +50,19 @@ public class CsvReportController {
     }
 
 
-
+    @GetMapping("/monthly/{year}/{month}")
+    public ResponseEntity<String> uploadMonthlyReport(
+            @PathVariable int year,
+            @PathVariable int month) {
+        try {
+            csvReportService.generateMonthlyCsvAndUpload(year, month);
+            String message = String.format(
+                    "Monthly report for %d-%02d uploaded to S3 successfully.", year, month);
+            return ResponseEntity.ok(message);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError()
+                    .body("Failed to generate report: " + e.getMessage());
+        }
+    }
 
 }
