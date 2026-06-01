@@ -177,9 +177,8 @@ pipeline {
                                 git config user.email "jenkins-ci@example.com"
                                 git remote set-url origin git@github.com:MarikaGanczarczyk/Vehicle-Insurance-Compliance-Tracker.git
                                 git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
-                                git checkout -B master origin/master
-                                git merge --no-ff --allow-unrelated-histories origin/develop -m "Merge develop into master after successful Jenkins build"
-                                git push origin master
+                                git checkout -B master origin/develop
+                                git push --force-with-lease origin master
                             '''
                         } else {
                             bat '''
@@ -193,11 +192,9 @@ pipeline {
                                 if errorlevel 1 exit /b 1
                                 git fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master
                                 if errorlevel 1 exit /b 1
-                                git checkout -B master origin/master
+                                git checkout -B master origin/develop
                                 if errorlevel 1 exit /b 1
-                                git merge --no-ff --allow-unrelated-histories origin/develop -m "Merge develop into master after successful Jenkins build"
-                                if errorlevel 1 exit /b 1
-                                git push origin master
+                                git push --force-with-lease origin master
                                 if errorlevel 1 exit /b 1
                             '''
                         }
