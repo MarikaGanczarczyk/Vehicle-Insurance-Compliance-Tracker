@@ -36,21 +36,21 @@ spec:
                   key: POSTGRES_PASSWORD
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               value: update
-            - name: AWS_REGION
+            - name: SPRING_CLOUD_AWS_REGION_STATIC
               valueFrom:
                 secretKeyRef:
                   name: aws-secret
-                  key: AWS_REGION
-            - name: AWS_ACCESSKEYID
+                  key: SPRING_CLOUD_AWS_REGION_STATIC
+            - name: SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: aws-secret
-                  key: AWS_ACCESSKEYID
-            - name: AWS_SECRETKEY
+                  key: SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY
+            - name: SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: aws-secret
-                  key: AWS_SECRETKEY
+                  key: SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY
             - name: AWS_S3_BUCKET_NAME
               valueFrom:
                 secretKeyRef:
