@@ -36,6 +36,21 @@ spec:
                   key: POSTGRES_PASSWORD
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               value: update
+            - name: AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secret
+                  key: AWS_REGION
+            - name: AWS_ACCESSKEYID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secret
+                  key: AWS_ACCESSKEYID
+            - name: AWS_SECRETKEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secret
+                  key: AWS_SECRETKEY
             - name: SPRING_CLOUD_AWS_REGION_STATIC
               valueFrom:
                 secretKeyRef:
